@@ -33,7 +33,9 @@ export const BookingCard = ({ booking, past = false, highlighted = false, action
 				<span className={styles.duration}>{formatDuration(duration)}</span>
 			</div>
 			<p className={clsx(styles.title, !trimmedTitle && styles.untitled)}>{title}</p>
-			{past ? <span className={styles.badge}>Прошла</span> : null}
+			{/* Конфликт отмечается не только цветом рамки, но и текстом — это видно и слышно всем */}
+			{highlighted ? <span className={clsx(styles.badge, styles.conflictBadge)}>Пересекается</span> : null}
+			{past && !highlighted ? <span className={styles.badge}>Прошла</span> : null}
 			{actions ? <div className={styles.actions}>{actions}</div> : null}
 		</article>
 	)
