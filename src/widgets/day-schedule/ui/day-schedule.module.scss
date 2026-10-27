@@ -1,40 +1,195 @@
+@use "shared/styles/mixins";
+
 .schedule {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-3);
-}
-
-.header {
-	display: flex;
-	flex-wrap: wrap;
 	gap: var(--space-2);
-	align-items: baseline;
-	justify-content: space-between;
 }
 
-.title {
-	font-size: var(--font-size-md);
-	font-weight: 600;
+// Сетка дня: колонка часов + холст. Позиции считаются от --offset/--length (минуты)
+.grid {
+	--hour: 56px;
+	--labels: 3rem;
+
+	position: relative;
+	display: grid;
+	grid-template-columns: var(--labels) 1fr;
+	padding-block: var(--space-2);
+
+	@include mixins.from(md) {
+		--hour: 64px;
+		--labels: 3.5rem;
+	}
 }
 
-.meta {
-	font-size: var(--font-size-sm);
-	color: var(--color-text-muted);
-}
-
-.list {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
+.hours {
+	position: relative;
 	padding: 0;
-	margin: 0;
+	list-style: none;
+
+	li {
+		position: absolute;
+		top: calc(var(--offset) * var(--hour) / 60);
+		right: var(--space-3);
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-subtle);
+		transform: translateY(-50%);
+	}
+}
+
+.canvas {
+	position: relative;
+	height: calc(var(--hours) * var(--hour));
+	background-image: linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+	background-size: 100% var(--hour);
+	border-bottom: 1px solid var(--color-border);
+
+	// Получасовые линии — светлее часовых
+	&::before {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		content: "";
+		background-image: linear-gradient(
+			to bottom,
+			transparent calc(var(--hour) / 2),
+			var(--color-grid) calc(var(--hour) / 2),
+			var(--color-grid) calc(var(--hour) / 2 + 1px),
+			transparent calc(var(--hour) / 2 + 1px)
+		);
+		background-size: 100% var(--hour);
+	}
+}
+
+.past {
+	position: absolute;
+	inset-inline: 0;
+	top: 0;
+	height: calc(var(--length) * var(--hour) / 60);
+	pointer-events: none;
+	background: repeating-linear-gradient(
+		-45deg,
+		transparent 0 6px,
+		color-mix(in srgb, var(--color-border) 45%, transparent) 6px 7px
+	);
+	transition: height 400ms ease;
+}
+
+.now {
+	position: absolute;
+	inset-inline: -6px 0;
+	top: calc(var(--offset) * var(--hour) / 60);
+	z-index: 3;
+	height: 2px;
+	pointer-events: none;
+	background: var(--color-now);
+	transition: top 400ms ease;
+
+	&::before {
+		position: absolute;
+		top: -4px;
+		left: 0;
+		width: 10px;
+		height: 10px;
+		content: "";
+		background: var(--color-now);
+		border-radius: 50%;
+	}
+}
+
+.items {
+	position: absolute;
+	inset: 0;
+	padding: 0;
 	list-style: none;
 }
 
-.empty {
-	padding: var(--space-6) var(--space-4);
-	color: var(--color-text-muted);
-	text-align: center;
-	border: 1px dashed var(--color-border);
-	border-radius: var(--radius-md);
+.slot {
+	position: absolute;
+	inset-inline: var(--space-1) 0;
+	top: calc(var(--offset) * var(--hour) / 60);
+	height: calc(var(--length) * var(--hour) / 60);
+	padding: 1px 0 2px;
+	transition:
+		top 260ms cubic-bezier(0.3, 0.7, 0.2, 1),
+		height 260ms cubic-bezier(0.3, 0.7, 0.2, 1);
+	animation: slot-in 220ms ease both;
+}
+
+@keyframes slot-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+}
+
+.event {
+	z-index: 2;
+	height: 100%;
+}
+
+.free {
+	display: flex;
+	align-items: flex-start;
+	width: 100%;
+	height: 100%;
+	padding: 6px var(--space-3);
+	color: transparent;
+	cursor: pointer;
+	background: transparent;
+	border: 1px dashed transparent;
+	border-radius: var(--radius-sm);
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast),
+		color var(--transition-fast);
+
+	&:hover,
+	&:focus-visible {
+		color: var(--color-text-muted);
+		background: var(--color-surface-muted);
+		border-color: var(--color-border-strong);
+	}
+
+	// На тач-устройствах наведения нет: подпись «+ Свободно» видна всегда, но приглушённо
+	@media (hover: none) {
+		color: var(--color-text-subtle);
+		border-color: var(--color-border);
+	}
+}
+
+.freeLabel {
+	font-size: var(--font-size-xs);
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+
+	&::before {
+		margin-right: 4px;
+		content: "+";
+	}
+}
+
+.loading {
+	opacity: 0.7;
+}
+
+.skeleton {
+	position: absolute;
+	inset-inline: var(--space-1) 0;
+	top: calc(var(--offset) * var(--hour) / 60);
+	height: calc(var(--length) * var(--hour) / 60);
+	background: var(--color-surface-hover);
+	border-radius: var(--radius-sm);
+	animation: pulse 1.2s ease-in-out infinite alternate;
+}
+
+.srOnly {
+	@include mixins.visually-hidden;
+}
+
+@keyframes pulse {
+	to {
+		opacity: 0.5;
+	}
 }

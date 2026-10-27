@@ -1,0 +1,29 @@
+.status {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+	min-height: 1.5em;
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+}
+
+.dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.free {
+	background: var(--color-free);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-free) 20%, transparent);
+}
+
+.busy {
+	background: var(--color-now);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-now) 20%, transparent);
+}
+
+.closed {
+	background: var(--color-text-subtle);
+}

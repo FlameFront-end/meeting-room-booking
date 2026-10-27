@@ -2,18 +2,26 @@
 
 import { useState } from 'react'
 
-import { formatBookingRange, isDateBookable, type Booking } from '@/entities/booking'
+import { BOOKING_DURATION_MINUTES, isDateBookable, WORKING_HOURS, type Booking } from '@/entities/booking'
 import { BookingFormDialog, type BookingFormTarget } from '@/features/booking-form'
 import { DeleteBookingButton } from '@/features/delete-booking'
 import { DateNavigator, useSelectedDate } from '@/features/select-date'
 import { toIsoDate } from '@/shared/lib/date'
 import { useHydrated, useNow } from '@/shared/lib/react'
-import { Button, Spinner } from '@/shared/ui'
+import { formatDuration } from '@/shared/lib/time'
+import { Button, Calendar, Icon, Spinner } from '@/shared/ui'
 import { DaySchedule } from '@/widgets/day-schedule'
+import { RoomStatus } from '@/widgets/room-status'
 
 import styles from './booking-day-screen.module.scss'
 
 const NO_HIGHLIGHT: ReadonlySet<string> = new Set()
+
+const RULES = [
+	`С ${WORKING_HOURS.start} до ${WORKING_HOURS.end}`,
+	`От ${formatDuration(BOOKING_DURATION_MINUTES.min)} до ${formatDuration(BOOKING_DURATION_MINUTES.max)}`,
+	'Встречи можно ставить встык'
+]
 
 /** Экран дня: собирает фичи и виджеты, сам бизнес-логики не содержит. */
 const BookingDay = () => {
@@ -37,48 +45,54 @@ const BookingDay = () => {
 	}
 
 	return (
-		<main className={styles.screen}>
-			<header className={styles.header}>
-				<h1 className={styles.title}>Переговорная</h1>
-				<DateNavigator value={date} today={today} onChange={setDate} />
-			</header>
-
-			<div className={styles.toolbar}>
+		<div className={styles.page}>
+			<header className={styles.topbar}>
+				<div className={styles.room}>
+					<h1 className={styles.title}>Переговорная</h1>
+					<RoomStatus now={now} />
+				</div>
 				<Button
 					variant='primary'
+					icon={<Icon name='plus' size={16} />}
 					disabled={!canCreate}
 					aria-describedby={canCreate ? undefined : 'create-unavailable'}
 					onClick={() => openForm({ mode: 'create', date })}
 				>
 					Новая бронь
 				</Button>
-				{canCreate ? null : (
-					<p id='create-unavailable' className={styles.hint}>
-						Дата уже прошла — создать бронь нельзя.
-					</p>
-				)}
-			</div>
+			</header>
 
-			<DaySchedule
-				date={date}
-				now={now}
-				highlightedIds={highlightedIds}
-				renderActions={(booking, { locked }) =>
-					locked ? null : (
-						<>
-							<Button
-								size='sm'
-								variant='ghost'
-								aria-label={`Изменить бронь ${formatBookingRange(booking)}`}
-								onClick={() => openForm({ mode: 'edit', booking })}
-							>
-								Изменить
-							</Button>
-							<DeleteBookingButton booking={booking} />
-						</>
-					)
-				}
-			/>
+			<div className={styles.layout}>
+				<aside className={styles.sidebar} aria-label='Календарь и правила'>
+					<Calendar value={date} today={today} onSelect={setDate} />
+					<section className={styles.rules} aria-labelledby='rules-title'>
+						<h2 id='rules-title' className={styles.rulesTitle}>
+							Как бронировать
+						</h2>
+						<ul>
+							{RULES.map(rule => (
+								<li key={rule}>{rule}</li>
+							))}
+						</ul>
+					</section>
+				</aside>
+
+				<main className={styles.main}>
+					<DateNavigator value={date} today={today} onChange={setDate} />
+					{canCreate ? null : (
+						<p id='create-unavailable' className={styles.hint}>
+							Этот день уже прошёл
+						</p>
+					)}
+					<DaySchedule
+						date={date}
+						now={now}
+						highlightedIds={highlightedIds}
+						onOpenBooking={booking => openForm({ mode: 'edit', booking })}
+						onPickFreeWindow={window => openForm({ mode: 'create', date, from: window.start })}
+					/>
+				</main>
+			</div>
 
 			{formTarget ? (
 				<BookingFormDialog
@@ -87,9 +101,14 @@ const BookingDay = () => {
 					onClose={() => setFormTarget(null)}
 					onSaved={onSaved}
 					onConflict={conflicts => setHighlightedIds(new Set(conflicts.map(conflict => conflict.id)))}
+					extraAction={
+						formTarget.mode === 'edit' ? (
+							<DeleteBookingButton booking={formTarget.booking} onDeleted={() => setFormTarget(null)} />
+						) : null
+					}
 				/>
 			) : null}
-		</main>
+		</div>
 	)
 }
 

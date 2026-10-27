@@ -36,7 +36,7 @@ describe('DaySchedule', () => {
 
 	it('пустое состояние', async () => {
 		renderSchedule()
-		expect(await screen.findByText(/броней нет/)).toBeInTheDocument()
+		expect(await screen.findByText(/Броней нет/)).toBeInTheDocument()
 	})
 
 	it('ошибка загрузки с возможностью повторить', async () => {
@@ -44,7 +44,7 @@ describe('DaySchedule', () => {
 		const { user } = renderSchedule()
 
 		const alert = await screen.findByRole('alert')
-		expect(alert).toHaveTextContent('Не удалось загрузить брони')
+		expect(alert).toHaveTextContent('Не удалось загрузить расписание')
 		expect(alert).toHaveTextContent('Сервис бронирования временно недоступен.')
 
 		mockApi.scenario.set({ failList: false })

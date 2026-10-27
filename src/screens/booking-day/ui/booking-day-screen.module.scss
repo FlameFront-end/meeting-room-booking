@@ -1,41 +1,102 @@
 @use "shared/styles/mixins";
 
-.screen {
+.page {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-5);
 	width: 100%;
-	max-width: 960px;
-	padding: var(--space-4);
+	max-width: 1080px;
+	min-height: 100dvh;
 	margin: 0 auto;
+}
+
+.topbar {
+	display: flex;
+	gap: var(--space-3);
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--space-4);
+	border-bottom: 1px solid var(--color-border);
 
 	@include mixins.from(md) {
-		padding: var(--space-6) var(--space-5);
+		padding: var(--space-5) var(--space-5) var(--space-4);
 	}
 }
 
-.header {
+.room {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-3);
+	gap: 2px;
+	min-width: 0;
 }
 
 .title {
 	font-size: var(--font-size-xl);
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
 }
 
-.toolbar {
+.layout {
+	display: grid;
+	flex: 1;
+
+	@include mixins.from(md) {
+		grid-template-columns: 248px 1fr;
+	}
+}
+
+// Месяц и правила — только на широком экране; на мобиле календарь открывается из заголовка с датой
+.sidebar {
+	--sidebar-pad-start: var(--space-5);
+	--sidebar-pad-end: var(--space-4);
+
+	display: none;
+
+	@include mixins.from(md) {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
+		padding: var(--space-4) var(--sidebar-pad-end) var(--space-4) var(--sidebar-pad-start);
+		border-right: 1px solid var(--color-border);
+	}
+}
+
+// Разделитель — на всю ширину панели, до её правой границы, как линия под шапкой
+.rules {
 	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-2) var(--space-3);
-	align-items: center;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-4) var(--sidebar-pad-end) 0 var(--sidebar-pad-start);
+	margin-inline: calc(-1 * var(--sidebar-pad-start)) calc(-1 * var(--sidebar-pad-end));
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+	border-top: 1px solid var(--color-border);
 
-	> button {
-		width: 100%;
+	ul {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		padding-left: 1rem;
+	}
+}
 
-		@include mixins.from(sm) {
-			width: auto;
-		}
+.rulesTitle {
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	color: var(--color-text);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	min-width: 0;
+	padding: var(--space-3) var(--space-4) var(--space-6);
+
+	@include mixins.from(md) {
+		padding: var(--space-4) var(--space-5) var(--space-6);
 	}
 }
 

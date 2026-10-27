@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import type { ReactNode } from 'react'
+import type { CSSProperties } from 'react'
 
 import { formatDuration, timeToMinutes } from '@/shared/lib/time'
 
@@ -14,29 +14,51 @@ type BookingCardProps = {
 	past?: boolean
 	/** Подсветка, например конфликтующей брони после 409. */
 	highlighted?: boolean
-	/** Слот для действий (редактировать, удалить) — их приносит слой features. */
-	actions?: ReactNode
+	/** Клик по карточке (например, открыть редактирование); label — доступное имя этого действия. */
+	action?: { label: string; onClick: () => void } | undefined
+	className?: string | undefined
+	style?: CSSProperties | undefined
 }
 
-export const BookingCard = ({ booking, past = false, highlighted = false, actions }: BookingCardProps) => {
+/** Короткие брони не вмещают две строки — показываем время и название в одну. */
+const COMPACT_MAX_MINUTES = 45
+
+export const BookingCard = ({
+	booking,
+	past = false,
+	highlighted = false,
+	action,
+	className,
+	style
+}: BookingCardProps) => {
 	const duration = timeToMinutes(booking.end) - timeToMinutes(booking.start)
 	const trimmedTitle = booking.title?.trim()
 	const title = trimmedTitle || 'Без названия'
 
 	return (
 		<article
-			className={clsx(styles.card, past && styles.past, highlighted && styles.highlighted)}
+			className={clsx(
+				styles.card,
+				duration <= COMPACT_MAX_MINUTES && styles.compact,
+				past && styles.past,
+				highlighted && styles.highlighted,
+				action && styles.interactive,
+				className
+			)}
+			style={style}
 			aria-label={`${formatBookingRange(booking)}, ${title}`}
 		>
-			<div className={styles.time}>
+			<p className={clsx(styles.title, !trimmedTitle && styles.untitled)}>{title}</p>
+			<p className={styles.meta}>
 				<span className={styles.range}>{formatBookingRange(booking)}</span>
 				<span className={styles.duration}>{formatDuration(duration)}</span>
-			</div>
-			<p className={clsx(styles.title, !trimmedTitle && styles.untitled)}>{title}</p>
-			{/* Конфликт отмечается не только цветом рамки, но и текстом — это видно и слышно всем */}
-			{highlighted ? <span className={clsx(styles.badge, styles.conflictBadge)}>Пересекается</span> : null}
-			{past && !highlighted ? <span className={styles.badge}>Прошла</span> : null}
-			{actions ? <div className={styles.actions}>{actions}</div> : null}
+				{/* Конфликт и «прошла» отмечаются текстом, а не только цветом */}
+				{highlighted ? <span className={styles.conflict}>Пересекается</span> : null}
+				{past && !highlighted ? <span className={styles.status}>Прошла</span> : null}
+			</p>
+			{action ? (
+				<button type='button' className={styles.stretched} aria-label={action.label} onClick={action.onClick} />
+			) : null}
 		</article>
 	)
 }

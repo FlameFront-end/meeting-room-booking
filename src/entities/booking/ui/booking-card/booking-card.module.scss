@@ -1,84 +1,112 @@
-@use "shared/styles/mixins";
-
+// Карточка-событие в сетке дня: тонированный фон и полоса слева, как в календарях
 .card {
-	display: grid;
-	grid-template-areas:
-		"time badge"
-		"title title"
-		"actions actions";
-	grid-template-columns: 1fr auto;
-	gap: var(--space-2);
-	padding: var(--space-3) var(--space-4);
-	background: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-sm);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+	padding: 6px var(--space-3) 6px calc(var(--space-3) + 3px);
+	overflow: hidden;
+	font-size: var(--font-size-sm);
+	line-height: 1.35;
+	color: var(--color-event-text);
+	background: var(--color-event-surface);
+	border-radius: var(--radius-sm);
 
-	@include mixins.from(md) {
-		grid-template-areas: "time title badge actions";
-		grid-template-columns: 9rem 1fr auto auto;
-		align-items: center;
+	&::before {
+		position: absolute;
+		inset-block: 0;
+		left: 0;
+		width: 3px;
+		content: "";
+		background: var(--color-event);
+	}
+}
+
+.compact {
+	flex-direction: row;
+	gap: var(--space-2);
+	align-items: baseline;
+	padding-block: 4px;
+
+	.title {
+		flex-shrink: 1;
+	}
+
+	.duration {
+		display: none;
+	}
+}
+
+.interactive {
+	transition: background-color var(--transition-fast);
+
+	&:hover {
+		background: var(--color-event-surface-hover);
 	}
 }
 
 .past {
-	opacity: 0.65;
-}
-
-.highlighted {
-	border-color: var(--color-danger);
-	box-shadow: 0 0 0 2px var(--color-danger-surface);
-}
-
-.time {
-	display: flex;
-	flex-direction: column;
-	grid-area: time;
-}
-
-.range {
-	font-weight: 600;
-	font-variant-numeric: tabular-nums;
-}
-
-.duration {
-	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
-}
+	background: var(--color-surface-hover);
 
-.title {
-	grid-area: title;
-	overflow-wrap: anywhere;
-}
-
-.untitled {
-	font-style: italic;
-	color: var(--color-text-muted);
-}
-
-.badge {
-	grid-area: badge;
-	align-self: start;
-	padding: 0 var(--space-2);
-	font-size: var(--font-size-xs);
-	color: var(--color-text-muted);
-	background: var(--color-surface-muted);
-	border-radius: var(--radius-sm);
-
-	@include mixins.from(md) {
-		align-self: center;
+	&::before {
+		background: var(--color-border-strong);
 	}
 }
 
-.conflictBadge {
-	font-weight: 600;
+.highlighted {
 	color: var(--color-danger);
+	outline: 1px solid var(--color-danger-border);
 	background: var(--color-danger-surface);
+
+	&::before {
+		background: var(--color-danger);
+	}
 }
 
-.actions {
+.title {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.untitled {
+	font-weight: 500;
+	opacity: 0.75;
+}
+
+.meta {
 	display: flex;
-	grid-area: actions;
-	gap: var(--space-2);
-	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 0 var(--space-2);
+	align-items: baseline;
+	font-size: var(--font-size-xs);
+	opacity: 0.85;
+}
+
+.range {
+	font-variant-numeric: tabular-nums;
+}
+
+.conflict,
+.status {
+	font-weight: 600;
+}
+
+// Вся карточка кликабельна, но в DOM это одна кнопка с понятным именем
+.stretched {
+	position: absolute;
+	inset: 0;
+	padding: 0;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: inherit;
+
+	&:focus-visible {
+		outline-offset: -2px;
+	}
 }
