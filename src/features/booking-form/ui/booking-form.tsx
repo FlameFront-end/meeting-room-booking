@@ -1,8 +1,8 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties } from 'react'
 
 import { formatBookingRange, type Booking } from '@/entities/booking'
 import { formatDuration } from '@/shared/lib/time'
-import { Alert, Button, DatePicker, Field, Reveal, Select } from '@/shared/ui'
+import { Alert, DatePicker, Field, Reveal, Select } from '@/shared/ui'
 
 import type { BookingFormState } from '../model/use-booking-form'
 
@@ -12,23 +12,23 @@ import { SubmitErrorAlert } from './submit-error-alert'
 
 type BookingFormProps = {
 	state: BookingFormState
-	mode: 'create' | 'edit'
 	/** Сегодня: раньше этой даты бронировать нельзя. */
 	today: string
-	extraAction?: ReactNode
-	onCancel: () => void
+	/** id формы: кнопка отправки живёт в подвале окна и связана с формой атрибутом form. */
+	id: string
 }
 
 const describeOverlap = (conflicts: readonly Booking[]) =>
 	conflicts.map(booking => `${formatBookingRange(booking)} · ${booking.title ?? 'Без названия'}`).join(', ')
 
 /** Порядок полей как в календарях: сначала «что», потом «когда». */
-export const BookingForm = ({ state, mode, today, extraAction, onCancel }: BookingFormProps) => {
+export const BookingForm = ({ state, today, id }: BookingFormProps) => {
 	const { fields, slot, errors, overlap, conflictIds, submitError, busy, startOptions, endOptions } = state
 	const activePreset = state.durationPresets.findIndex(preset => preset.pressed)
 
 	return (
 		<form
+			id={id}
 			className={styles.form}
 			noValidate
 			aria-busy={state.isPending}
@@ -148,21 +148,6 @@ export const BookingForm = ({ state, mode, today, extraAction, onCancel }: Booki
 			</Reveal>
 
 			<BusySlots bookings={busy.bookings} status={busy.status} conflictIds={conflictIds} selected={slot} />
-
-			<div className={styles.actions}>
-				{extraAction ? (
-					// Пока бронь сохраняется, удалять её нельзя
-					<fieldset className={styles.extraAction} disabled={state.isPending}>
-						{extraAction}
-					</fieldset>
-				) : null}
-				<Button variant='secondary' disabled={state.isPending} onClick={onCancel}>
-					Отмена
-				</Button>
-				<Button type='submit' variant='primary' loading={state.isPending}>
-					{mode === 'create' ? 'Забронировать' : 'Сохранить'}
-				</Button>
-			</div>
 		</form>
 	)
 }

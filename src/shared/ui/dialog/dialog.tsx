@@ -18,6 +18,8 @@ type DialogProps = {
 	dismissible?: boolean
 	size?: 'sm' | 'md'
 	children: ReactNode
+	/** Кнопки действий: отдельная полоса внизу, прилипает к низу окна при прокрутке. */
+	footer?: ReactNode
 }
 
 /**
@@ -26,7 +28,15 @@ type DialogProps = {
  * родитель управляет им условным рендером, поэтому каждое открытие начинается с чистого состояния.
  * Начальный фокус — на элементе с data-autofocus. При закрытии фокус возвращается на элемент, с которого окно открыли.
  */
-export const Dialog = ({ title, description, onClose, dismissible = true, size = 'md', children }: DialogProps) => {
+export const Dialog = ({
+	title,
+	description,
+	onClose,
+	dismissible = true,
+	size = 'md',
+	children,
+	footer
+}: DialogProps) => {
 	const ref = useRef<HTMLDialogElement>(null)
 	const titleId = useId()
 	const descriptionId = useId()
@@ -92,6 +102,7 @@ export const Dialog = ({ title, description, onClose, dismissible = true, size =
 				</header>
 				{children}
 			</div>
+			{footer ? <footer className={styles.footer}>{footer}</footer> : null}
 		</dialog>
 	)
 }

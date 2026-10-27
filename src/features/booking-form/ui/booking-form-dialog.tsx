@@ -1,17 +1,18 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { toast } from 'sonner'
 
 import { BOOKING_DURATION_MINUTES, formatBookingWhen, WORKING_HOURS, type Booking } from '@/entities/booking'
 import { toIsoDate } from '@/shared/lib/date'
 import { formatDuration } from '@/shared/lib/time'
-import { Dialog } from '@/shared/ui'
+import { Button, Dialog } from '@/shared/ui'
 
 import type { BookingFormTarget } from '../model/form-schema'
 import { useBookingForm } from '../model/use-booking-form'
 
 import { BookingForm } from './booking-form'
+import styles from './booking-form.module.scss'
 
 type BookingFormDialogProps = {
 	target: BookingFormTarget
@@ -37,6 +38,7 @@ export const BookingFormDialog = ({
 	onConflict,
 	extraAction
 }: BookingFormDialogProps) => {
+	const formId = useId()
 	const state = useBookingForm({
 		target,
 		now,
@@ -55,14 +57,24 @@ export const BookingFormDialog = ({
 			description={RULES_HINT}
 			dismissible={!state.isPending}
 			onClose={onClose}
+			footer={
+				<>
+					{extraAction ? (
+						// Пока бронь сохраняется, удалять её нельзя
+						<fieldset className={styles.extraAction} disabled={state.isPending}>
+							{extraAction}
+						</fieldset>
+					) : null}
+					<Button variant='secondary' disabled={state.isPending} onClick={onClose}>
+						Отмена
+					</Button>
+					<Button type='submit' form={formId} variant='primary' loading={state.isPending}>
+						{target.mode === 'create' ? 'Забронировать' : 'Сохранить'}
+					</Button>
+				</>
+			}
 		>
-			<BookingForm
-				state={state}
-				mode={target.mode}
-				today={toIsoDate(now)}
-				extraAction={extraAction}
-				onCancel={onClose}
-			/>
+			<BookingForm id={formId} state={state} today={toIsoDate(now)} />
 		</Dialog>
 	)
 }

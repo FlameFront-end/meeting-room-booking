@@ -46,22 +46,26 @@ const ConfirmDeleteDialog = ({ booking, onClose, onDeleted }: ConfirmDeleteDialo
 			size='sm'
 			dismissible={!mutation.isPending}
 			onClose={onClose}
+			footer={
+				<>
+					<Button variant='secondary' disabled={mutation.isPending} data-autofocus onClick={onClose}>
+						{error?.type === 'locked' ? 'Закрыть' : 'Отмена'}
+					</Button>
+					{error?.type === 'locked' ? null : (
+						<Button variant='dangerSolid' loading={mutation.isPending} onClick={() => void confirm()}>
+							{error ? 'Повторить' : 'Удалить'}
+						</Button>
+					)}
+				</>
+			}
 		>
 			{error ? (
 				<Alert tone='danger' title='Не получилось удалить'>
 					{error.message}
 				</Alert>
-			) : null}
-			<div className={styles.actions}>
-				<Button variant='ghost' disabled={mutation.isPending} data-autofocus onClick={onClose}>
-					{error?.type === 'locked' ? 'Закрыть' : 'Отмена'}
-				</Button>
-				{error?.type === 'locked' ? null : (
-					<Button variant='dangerSolid' loading={mutation.isPending} onClick={() => void confirm()}>
-						{error ? 'Повторить' : 'Удалить'}
-					</Button>
-				)}
-			</div>
+			) : (
+				<p className={styles.text}>Бронь исчезнет из расписания. Это действие нельзя отменить.</p>
+			)}
 		</Dialog>
 	)
 }
