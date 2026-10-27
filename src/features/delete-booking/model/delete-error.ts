@@ -13,7 +13,7 @@ export type DeleteError = { type: 'gone' } | DeleteFailure
 export const toDeleteError = (error: unknown): DeleteError => {
 	if (isBookingErrorCode(error, BOOKING_ERROR_CODES.notFound)) return { type: 'gone' }
 	if (isBookingErrorCode(error, BOOKING_ERROR_CODES.locked)) {
-		return { type: 'locked', message: 'Бронь уже началась — удалить её нельзя.' }
+		return { type: 'locked', message: 'Встреча уже началась, её нельзя удалить.' }
 	}
-	return { type: 'failure', message: isApiError(error) ? error.message : 'Не удалось удалить бронь.' }
+	return { type: 'failure', message: isApiError(error) ? error.message : 'Попробуйте ещё раз.' }
 }

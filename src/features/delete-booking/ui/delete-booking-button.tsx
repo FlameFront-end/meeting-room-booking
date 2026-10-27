@@ -3,18 +3,18 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { formatBookingRange, useDeleteBookingMutation, type Booking } from '@/entities/booking'
-import { formatIsoDate } from '@/shared/lib/date'
-import { Alert, Button, Dialog } from '@/shared/ui'
+import { formatBookingRange, formatBookingWhen, useDeleteBookingMutation, type Booking } from '@/entities/booking'
+import { Alert, Button, Dialog, Icon } from '@/shared/ui'
 
 import { toDeleteError, type DeleteFailure } from '../model/delete-error'
 
 import styles from './delete-booking-button.module.scss'
 
-const describe = (booking: Booking) =>
-	`${formatIsoDate(booking.date)}, ${formatBookingRange(booking)}${booking.title ? ` — ${booking.title}` : ''}`
+const describe = (booking: Booking) => `${formatBookingWhen(booking)}${booking.title ? ` · ${booking.title}` : ''}`
 
-const ConfirmDeleteDialog = ({ booking, onClose }: { booking: Booking; onClose: () => void }) => {
+type ConfirmDeleteDialogProps = { booking: Booking; onClose: () => void; onDeleted?: (() => void) | undefined }
+
+const ConfirmDeleteDialog = ({ booking, onClose, onDeleted }: ConfirmDeleteDialogProps) => {
 	const mutation = useDeleteBookingMutation()
 	const [error, setError] = useState<DeleteFailure | null>(null)
 
@@ -26,11 +26,13 @@ const ConfirmDeleteDialog = ({ booking, onClose }: { booking: Booking; onClose: 
 			await mutation.mutateAsync({ id: booking.id, date: booking.date })
 			toast.success('Бронь удалена', { description: describe(booking) })
 			onClose()
+			onDeleted?.()
 		} catch (caught) {
 			const next = toDeleteError(caught)
 			if (next.type === 'gone') {
-				toast.info('Бронь уже удалили', { description: 'Список броней обновлён.' })
+				toast.info('Эту бронь уже удалили')
 				onClose()
+				onDeleted?.()
 				return
 			}
 			setError(next)
@@ -46,7 +48,7 @@ const ConfirmDeleteDialog = ({ booking, onClose }: { booking: Booking; onClose: 
 			onClose={onClose}
 		>
 			{error ? (
-				<Alert tone='danger' title='Не удалось удалить'>
+				<Alert tone='danger' title='Не получилось удалить'>
 					{error.message}
 				</Alert>
 			) : null}
@@ -55,7 +57,7 @@ const ConfirmDeleteDialog = ({ booking, onClose }: { booking: Booking; onClose: 
 					{error?.type === 'locked' ? 'Закрыть' : 'Отмена'}
 				</Button>
 				{error?.type === 'locked' ? null : (
-					<Button variant='danger' loading={mutation.isPending} onClick={() => void confirm()}>
+					<Button variant='dangerSolid' loading={mutation.isPending} onClick={() => void confirm()}>
 						{error ? 'Повторить' : 'Удалить'}
 					</Button>
 				)}
@@ -64,21 +66,29 @@ const ConfirmDeleteDialog = ({ booking, onClose }: { booking: Booking; onClose: 
 	)
 }
 
-/** Кнопка «Удалить» с подтверждением. Для начавшихся броней её не показывают — решает расписание. */
-export const DeleteBookingButton = ({ booking }: { booking: Booking }) => {
+type DeleteBookingButtonProps = {
+	booking: Booking
+	/** Бронь удалена (или её уже не было) — например, закрыть форму редактирования. */
+	onDeleted?: () => void
+}
+
+/** Кнопка «Удалить» с подтверждением. */
+export const DeleteBookingButton = ({ booking, onDeleted }: DeleteBookingButtonProps) => {
 	const [isConfirming, setIsConfirming] = useState(false)
 
 	return (
 		<>
 			<Button
-				size='sm'
 				variant='danger'
+				icon={<Icon name='trash' size={16} />}
 				aria-label={`Удалить бронь ${formatBookingRange(booking)}`}
 				onClick={() => setIsConfirming(true)}
 			>
 				Удалить
 			</Button>
-			{isConfirming ? <ConfirmDeleteDialog booking={booking} onClose={() => setIsConfirming(false)} /> : null}
+			{isConfirming ? (
+				<ConfirmDeleteDialog booking={booking} onDeleted={onDeleted} onClose={() => setIsConfirming(false)} />
+			) : null}
 		</>
 	)
 }
