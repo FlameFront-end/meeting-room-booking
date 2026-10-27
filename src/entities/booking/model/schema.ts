@@ -18,7 +18,7 @@ export const timeSchema = z.string().refine(isTimeString, { message: 'Время
 const titleSchema = z
 	.string()
 	.trim()
-	.max(BOOKING_TITLE_MAX_LENGTH, { message: `Название — не длиннее ${BOOKING_TITLE_MAX_LENGTH} символов` })
+	.max(BOOKING_TITLE_MAX_LENGTH, { message: `Не длиннее ${BOOKING_TITLE_MAX_LENGTH} символов` })
 
 export const bookingSchema = z.object({
 	id: z.string().min(1),

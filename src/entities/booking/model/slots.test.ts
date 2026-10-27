@@ -1,5 +1,5 @@
 import type { Booking } from './schema'
-import { getTimeOptions, shiftEndWithStart, suggestFreeSlot } from './slots'
+import { getFreeWindows, getTimeOptions, shiftEndWithStart, suggestFreeSlot } from './slots'
 
 const TODAY = '2026-10-27'
 const TOMORROW = '2026-10-28'
@@ -68,6 +68,21 @@ describe('suggestFreeSlot', () => {
 		expect(suggestFreeSlot(TODAY, [], now)).toEqual({ date: TODAY, start: '17:30', end: '18:00' })
 	})
 
+	it('ищет начиная с заданного времени и укорачивает бронь под узкое окно', () => {
+		expect(suggestFreeSlot(TOMORROW, [], EARLY_MORNING, '14:00')).toEqual({
+			date: TOMORROW,
+			start: '14:00',
+			end: '15:00'
+		})
+		// Окно 11:00–11:30: полчаса в начале окна лучше, чем час где-то позже
+		const narrow = [booking('a', '10:00', '11:00'), booking('b', '11:30', '12:00')]
+		expect(suggestFreeSlot(TOMORROW, narrow, EARLY_MORNING, '11:00')).toEqual({
+			date: TOMORROW,
+			start: '11:00',
+			end: '11:30'
+		})
+	})
+
 	it('null, если свободного времени не осталось', () => {
 		expect(suggestFreeSlot(TODAY, [], new Date(`${TODAY}T17:45:00`))).toBeNull()
 		expect(suggestFreeSlot(YESTERDAY, [], EARLY_MORNING)).toBeNull()
@@ -85,5 +100,32 @@ describe('shiftEndWithStart', () => {
 
 	it('не выходит за конец рабочего дня', () => {
 		expect(shiftEndWithStart({ start: '10:00', end: '12:00' }, '17:00')).toBe('18:00')
+	})
+})
+
+describe('getFreeWindows', () => {
+	it('весь день свободен', () => {
+		expect(getFreeWindows(TOMORROW, [], EARLY_MORNING)).toEqual([{ start: '09:00', end: '18:00' }])
+	})
+
+	it('окна между бронями, касание границ не оставляет щели', () => {
+		const bookings = [
+			booking('b', '13:00', '14:00'),
+			booking('a', '10:00', '11:00'),
+			booking('c', '14:00', '17:45')
+		]
+		expect(getFreeWindows(TOMORROW, bookings, EARLY_MORNING)).toEqual([
+			{ start: '09:00', end: '10:00' },
+			{ start: '11:00', end: '13:00' }
+		])
+	})
+
+	it('для сегодня начинается с текущего времени, округлённого до шага', () => {
+		const now = new Date(`${TODAY}T12:05:00`)
+		expect(getFreeWindows(TODAY, [], now)).toEqual([{ start: '12:15', end: '18:00' }])
+	})
+
+	it('для прошедшей даты окон нет', () => {
+		expect(getFreeWindows(YESTERDAY, [], EARLY_MORNING)).toEqual([])
 	})
 })

@@ -60,18 +60,33 @@ export const getTimeOptions = (
 
 /**
  * Ближайший свободный слот на дату: сначала часовой, затем минимальной длительности.
+ * `from` — начинать поиск не раньше этого времени (например, с начала выбранного свободного окна).
  * null — на эту дату свободного времени не осталось.
  */
-export const suggestFreeSlot = (date: IsoDate, bookings: readonly Booking[], now: Date): BookingSlot | null => {
-	const starts = getTimeOptions('start', { date, now }).filter(option => !option.disabled)
+export const suggestFreeSlot = (
+	date: IsoDate,
+	bookings: readonly Booking[],
+	now: Date,
+	from?: TimeString
+): BookingSlot | null => {
+	const fromMinutes = from === undefined ? 0 : timeToMinutes(from)
+	const starts = getTimeOptions('start', { date, now }).filter(
+		option => !option.disabled && timeToMinutes(option.value) >= fromMinutes
+	)
 
-	for (const duration of [DEFAULT_DURATION, BOOKING_DURATION_MINUTES.min]) {
-		for (const { value: start } of starts) {
-			const endMinutes = timeToMinutes(start) + duration
-			if (endMinutes > WORKDAY_END) break
-			const slot = { date, start, end: minutesToTime(endMinutes) }
-			if (validateBooking(slot, { now, bookings }).length === 0) return slot
-		}
+	const durations = [DEFAULT_DURATION, BOOKING_DURATION_MINUTES.min]
+	// Без `from` важнее длительность (лучше час позже, чем полчаса сейчас),
+	// с `from` — начало: пользователь выбрал конкретное окно
+	const candidates =
+		from === undefined
+			? durations.flatMap(duration => starts.map(({ value }) => [value, duration] as const))
+			: starts.flatMap(({ value }) => durations.map(duration => [value, duration] as const))
+
+	for (const [start, duration] of candidates) {
+		const endMinutes = timeToMinutes(start) + duration
+		if (endMinutes > WORKDAY_END) continue
+		const slot = { date, start, end: minutesToTime(endMinutes) }
+		if (validateBooking(slot, { now, bookings }).length === 0) return slot
 	}
 
 	return null
@@ -88,4 +103,34 @@ export const shiftEndWithStart = (previous: Pick<BookingSlot, 'start' | 'end'>, 
 			? previousDuration
 			: DEFAULT_DURATION
 	return minutesToTime(Math.min(timeToMinutes(nextStart) + duration, WORKDAY_END))
+}
+
+export type FreeWindow = Pick<BookingSlot, 'start' | 'end'>
+
+/**
+ * Свободные окна рабочего дня, в которые ещё можно что-то забронировать (не короче минимальной брони).
+ * Для сегодня окно начинается не раньше текущего времени, округлённого вверх до шага сетки.
+ */
+export const getFreeWindows = (date: IsoDate, bookings: readonly Booking[], now: Date): FreeWindow[] => {
+	const boundary = pastBoundary(date, now)
+	if (boundary === Number.POSITIVE_INFINITY) return []
+
+	const roundedNow = Math.ceil(boundary / BOOKING_TIME_STEP_MINUTES) * BOOKING_TIME_STEP_MINUTES
+	let cursor = Math.max(WORKDAY_START, roundedNow)
+	const windows: [number, number][] = []
+
+	const busy = bookings
+		.filter(booking => booking.date === date)
+		.map(booking => [timeToMinutes(booking.start), timeToMinutes(booking.end)] as const)
+		.sort(([a], [b]) => a - b)
+
+	for (const [start, end] of busy) {
+		if (start > cursor) windows.push([cursor, Math.min(start, WORKDAY_END)])
+		cursor = Math.max(cursor, end)
+	}
+	if (cursor < WORKDAY_END) windows.push([cursor, WORKDAY_END])
+
+	return windows
+		.filter(([start, end]) => end - start >= BOOKING_DURATION_MINUTES.min)
+		.map(([start, end]) => ({ start: minutesToTime(start), end: minutesToTime(end) }))
 }

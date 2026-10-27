@@ -25,16 +25,20 @@ export {
 	validateBooking,
 	type BookingValidationContext
 } from './model/rules'
+export { getRoomStatus, type RoomStatus } from './model/room-status'
 export {
+	getFreeWindows,
 	getTimeOptions,
 	shiftEndWithStart,
 	suggestFreeSlot,
+	type FreeWindow,
 	type TimeOption,
 	type TimeOptionsKind
 } from './model/slots'
 export {
 	describeViolation,
 	formatBookingRange,
+	formatBookingWhen,
 	type BookingViolation,
 	type BookingViolationCode,
 	type BookingViolationField
