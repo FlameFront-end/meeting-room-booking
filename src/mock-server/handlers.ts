@@ -78,12 +78,9 @@ export const createBookingHandlers = ({ store, scenario, now = () => new Date() 
 		const allConflicts = rival ? [rival] : conflicts
 
 		if (allConflicts.length > 0) {
-			return errorResponse(
-				409,
-				BOOKING_ERROR_CODES.conflict,
-				'Это время уже занято. Список броней обновлён — выберите другое время.',
-				{ conflicts: allConflicts }
-			)
+			return errorResponse(409, BOOKING_ERROR_CODES.conflict, 'Это время уже занято.', {
+				conflicts: allConflicts
+			})
 		}
 
 		return null
@@ -126,14 +123,9 @@ export const createBookingHandlers = ({ store, scenario, now = () => new Date() 
 		http.patch<{ id: string }>(ITEM, async ({ request, params }) => {
 			await simulateLatency()
 			const existing = store.getById(params.id)
-			if (!existing)
-				return errorResponse(404, BOOKING_ERROR_CODES.notFound, 'Бронь не найдена. Возможно, её уже удалили.')
+			if (!existing) return errorResponse(404, BOOKING_ERROR_CODES.notFound, 'Бронь не найдена.')
 			if (isBookingStarted(existing, now())) {
-				return errorResponse(
-					422,
-					BOOKING_ERROR_CODES.locked,
-					'Бронь уже началась или прошла — изменить её нельзя.'
-				)
+				return errorResponse(422, BOOKING_ERROR_CODES.locked, 'Встреча уже началась, её нельзя изменить.')
 			}
 
 			const patch = bookingPatchSchema.safeParse(await readJson(request))
@@ -155,14 +147,9 @@ export const createBookingHandlers = ({ store, scenario, now = () => new Date() 
 		http.delete<{ id: string }>(ITEM, async ({ params }) => {
 			await simulateLatency()
 			const existing = store.getById(params.id)
-			if (!existing)
-				return errorResponse(404, BOOKING_ERROR_CODES.notFound, 'Бронь не найдена. Возможно, её уже удалили.')
+			if (!existing) return errorResponse(404, BOOKING_ERROR_CODES.notFound, 'Бронь не найдена.')
 			if (isBookingStarted(existing, now())) {
-				return errorResponse(
-					422,
-					BOOKING_ERROR_CODES.locked,
-					'Бронь уже началась или прошла — удалить её нельзя.'
-				)
+				return errorResponse(422, BOOKING_ERROR_CODES.locked, 'Встреча уже началась, её нельзя удалить.')
 			}
 
 			store.remove(existing.id)

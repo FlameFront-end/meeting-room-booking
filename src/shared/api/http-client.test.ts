@@ -63,7 +63,7 @@ describe('createHttpClient', () => {
 
 		const error = await captureError(http.get('/items', { schema: itemSchema }))
 		expect(error.kind).toBe('server')
-		expect(error.message).toBe('Ошибка на сервере. Попробуйте позже.')
+		expect(error.message).toBe('Сервер не отвечает. Попробуйте чуть позже.')
 	})
 
 	it('сетевой сбой → kind: network', async () => {
