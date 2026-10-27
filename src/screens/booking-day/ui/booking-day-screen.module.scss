@@ -23,3 +23,23 @@
 .title {
 	font-size: var(--font-size-xl);
 }
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2) var(--space-3);
+	align-items: center;
+
+	> button {
+		width: 100%;
+
+		@include mixins.from(sm) {
+			width: auto;
+		}
+	}
+}
+
+.hint {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-muted);
+}
