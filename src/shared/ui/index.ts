@@ -1,3 +1,5 @@
 export { Alert } from './alert/alert'
 export { Button, type ButtonProps } from './button/button'
+export { Dialog } from './dialog/dialog'
+export { Field, type FieldControlProps } from './field/field'
 export { Spinner } from './spinner/spinner'

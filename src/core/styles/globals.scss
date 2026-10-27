@@ -62,3 +62,8 @@ textarea {
 		animation-iteration-count: 1 !important; // stylelint-disable-line declaration-no-important
 	}
 }
+
+// Пока открыто модальное окно, страница под ним не прокручивается
+:root:has(dialog[open]) {
+	overflow: hidden;
+}

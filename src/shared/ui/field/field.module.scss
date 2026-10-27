@@ -1,0 +1,43 @@
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+
+	:where(input, select, textarea) {
+		width: 100%;
+		min-height: 44px;
+		padding: var(--space-2) var(--space-3);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+	}
+}
+
+.invalid :where(input, select, textarea) {
+	border-color: var(--color-danger);
+}
+
+.label {
+	font-size: var(--font-size-sm);
+	font-weight: 500;
+}
+
+.hint {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+}
+
+.error {
+	font-size: var(--font-size-sm);
+	color: var(--color-danger);
+
+	&:empty {
+		display: none;
+	}
+}
