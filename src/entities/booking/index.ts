@@ -1,5 +1,10 @@
 // model
-export { BOOKING_DURATION_MINUTES, BOOKING_TITLE_MAX_LENGTH, WORKING_HOURS } from './model/constants'
+export {
+	BOOKING_DURATION_MINUTES,
+	BOOKING_TIME_STEP_MINUTES,
+	BOOKING_TITLE_MAX_LENGTH,
+	WORKING_HOURS
+} from './model/constants'
 export {
 	bookingInputSchema,
 	bookingListSchema,
@@ -21,6 +26,13 @@ export {
 	type BookingValidationContext
 } from './model/rules'
 export {
+	getTimeOptions,
+	shiftEndWithStart,
+	suggestFreeSlot,
+	type TimeOption,
+	type TimeOptionsKind
+} from './model/slots'
+export {
 	describeViolation,
 	formatBookingRange,
 	type BookingViolation,
@@ -33,7 +45,9 @@ export {
 	BOOKING_ERROR_CODES,
 	BOOKINGS_ENDPOINT,
 	getConflictsFromError,
+	getViolationsFromError,
 	isBookingConflictError,
+	isBookingErrorCode,
 	type BookingConflictDetails,
 	type BookingErrorCode,
 	type BookingValidationDetails

@@ -1,4 +1,4 @@
-import { bookingsApi, getConflictsFromError, type Booking } from '@/entities/booking'
+import { bookingsApi, getConflictsFromError, getViolationsFromError, type Booking } from '@/entities/booking'
 import { ApiError } from '@/shared/api'
 import { mockApi } from '@/test/mock-api'
 import { freezeTime } from '@/test/time'
@@ -68,6 +68,7 @@ describe('POST /api/bookings', () => {
 	it('422 для прошедшего времени сегодня', async () => {
 		const error = await captureApiError(bookingsApi.create({ date: TODAY, start: '11:00', end: '12:30' }))
 		expect(error.details).toEqual({ violations: [{ code: 'START_IN_PAST', field: 'start' }] })
+		expect(getViolationsFromError(error)).toEqual([{ code: 'START_IN_PAST', field: 'start' }])
 	})
 
 	it('400 для тела не по схеме', async () => {

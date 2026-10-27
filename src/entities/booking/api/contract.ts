@@ -45,3 +45,25 @@ export const getConflictsFromError = (error: unknown): Booking[] => {
 }
 
 export const isBookingConflictError = (error: unknown): boolean => isApiError(error) && error.kind === 'conflict'
+
+const violationSchema = z.discriminatedUnion('code', [
+	z.object({ code: z.literal('DATE_IN_PAST'), field: z.literal('date') }),
+	z.object({ code: z.literal('START_IN_PAST'), field: z.literal('start') }),
+	z.object({ code: z.literal('OUTSIDE_WORKING_HOURS'), field: z.enum(['start', 'end']) }),
+	z.object({ code: z.literal('START_NOT_BEFORE_END'), field: z.literal('end') }),
+	z.object({ code: z.literal('TOO_SHORT'), field: z.literal('end') }),
+	z.object({ code: z.literal('TOO_LONG'), field: z.literal('end') }),
+	z.object({ code: z.literal('OVERLAP'), field: z.literal('form'), conflicts: z.array(bookingSchema) })
+]) satisfies z.ZodType<BookingViolation>
+
+const validationDetailsSchema = z.object({ violations: z.array(violationSchema) })
+
+/** Нарушения правил из 422 BOOKING_VALIDATION_FAILED. Пустой массив, если ошибка другая или details не пришли. */
+export const getViolationsFromError = (error: unknown): BookingViolation[] => {
+	if (!isApiError(error) || error.code !== BOOKING_ERROR_CODES.validationFailed) return []
+	const parsed = validationDetailsSchema.safeParse(error.details)
+	return parsed.success ? parsed.data.violations : []
+}
+
+export const isBookingErrorCode = (error: unknown, code: BookingErrorCode): boolean =>
+	isApiError(error) && error.code === code
