@@ -1,4 +1,15 @@
-import { addDays, compareIsoDates, formatIsoDate, isIsoDate, minutesSinceMidnight, toIsoDate } from './date'
+import {
+	addDays,
+	addMonths,
+	compareIsoDates,
+	formatIsoDate,
+	getCalendarWeeks,
+	isIsoDate,
+	minutesSinceMidnight,
+	startOfMonth,
+	toIsoDate,
+	weekdayIndex
+} from './date'
 
 describe('date', () => {
 	it.each(['2026-10-27', '2028-02-29'])('isIsoDate(%s) → true', value => {
@@ -43,5 +54,27 @@ describe('date', () => {
 
 	it('бросает на невалидной дате', () => {
 		expect(() => addDays('2026-02-30', 1)).toThrow(RangeError)
+	})
+})
+
+describe('календарь', () => {
+	it('addMonths прижимает день к концу месяца и переходит через год', () => {
+		expect(addMonths('2026-01-31', 1)).toBe('2026-02-28')
+		expect(addMonths('2028-01-31', 1)).toBe('2028-02-29')
+		expect(addMonths('2026-12-15', 1)).toBe('2027-01-15')
+		expect(addMonths('2026-01-15', -1)).toBe('2025-12-15')
+	})
+
+	it('weekdayIndex считает с понедельника', () => {
+		expect(weekdayIndex('2026-10-26')).toBe(0)
+		expect(weekdayIndex('2026-11-01')).toBe(6)
+	})
+
+	it('getCalendarWeeks: полные недели с понедельника', () => {
+		const weeks = getCalendarWeeks('2026-10-27')
+		expect(weeks).toHaveLength(5)
+		expect(weeks[0]?.[0]).toBe('2026-09-28')
+		expect(weeks.at(-1)?.at(-1)).toBe('2026-11-01')
+		expect(startOfMonth('2026-10-27')).toBe('2026-10-01')
 	})
 })

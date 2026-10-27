@@ -58,3 +58,35 @@ export const formatIsoDate = (value: IsoDate, options: Intl.DateTimeFormatOption
 		...options,
 		timeZone: 'UTC'
 	}).format(new Date(isoToUtcMs(value)))
+
+const daysInMonth = (year: number, month: number): number => new Date(Date.UTC(year, month, 0)).getUTCDate()
+
+/** Сдвиг на N месяцев; день прижимается к концу месяца: 31 января + 1 месяц → 28/29 февраля. */
+export const addMonths = (value: IsoDate, months: number): IsoDate => {
+	const parts = parseParts(value)
+	if (!parts || !isIsoDate(value)) throw new RangeError(`Ожидалась дата в формате YYYY-MM-DD, получено "${value}"`)
+	const [year, month, day] = parts
+	const total = year * 12 + (month - 1) + months
+	const nextYear = Math.floor(total / 12)
+	const nextMonth = (total % 12) + 1
+	return `${nextYear}-${pad(nextMonth)}-${pad(Math.min(day, daysInMonth(nextYear, nextMonth)))}`
+}
+
+/** Первое число месяца, в котором лежит дата. */
+export const startOfMonth = (value: IsoDate): IsoDate => `${value.slice(0, 8)}01`
+
+/** День недели с понедельника: 0 — пн, 6 — вс. */
+export const weekdayIndex = (value: IsoDate): number => (new Date(isoToUtcMs(value)).getUTCDay() + 6) % 7
+
+/** Недели месяца для календаря: с понедельника, вместе с хвостами соседних месяцев. */
+export const getCalendarWeeks = (month: IsoDate): IsoDate[][] => {
+	const first = startOfMonth(month)
+	const last = addDays(addMonths(first, 1), -1)
+	const weeks: IsoDate[][] = []
+	let cursor = addDays(first, -weekdayIndex(first))
+	while (compareIsoDates(cursor, last) <= 0) {
+		weeks.push(Array.from({ length: 7 }, (_, index) => addDays(cursor, index)))
+		cursor = addDays(cursor, 7)
+	}
+	return weeks
+}
