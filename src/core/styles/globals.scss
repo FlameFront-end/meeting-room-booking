@@ -1,0 +1,64 @@
+@use "shared/styles/tokens";
+@use "shared/styles/mixins";
+
+:root {
+	@include tokens.base-tokens;
+	@include tokens.light-theme;
+
+	color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		@include tokens.dark-theme;
+	}
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	text-size-adjust: 100%;
+}
+
+body {
+	min-height: 100dvh;
+	margin: 0;
+	font-family: var(--font-sans);
+	font-size: var(--font-size-md);
+	line-height: 1.5;
+	color: var(--color-text);
+	background: var(--color-bg);
+}
+
+h1,
+h2,
+h3,
+p {
+	margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+	color: inherit;
+}
+
+:focus-visible {
+	@include mixins.focus-ring;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important; // stylelint-disable-line declaration-no-important
+		animation-duration: 0.01ms !important; // stylelint-disable-line declaration-no-important
+		animation-iteration-count: 1 !important; // stylelint-disable-line declaration-no-important
+	}
+}

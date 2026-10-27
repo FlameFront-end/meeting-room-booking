@@ -1,0 +1,17 @@
+name: Setup
+description: Node из .nvmrc, кеш npm и установка зависимостей по lock-файлу
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci --no-audit --no-fund
+      env:
+        # git-хуки в CI не нужны
+        HUSKY: '0'

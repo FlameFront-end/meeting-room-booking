@@ -1,0 +1,58 @@
+// Дизайн-токены — CSS-переменные, чтобы тема переключалась без пересборки стилей
+
+@mixin light-theme {
+	--color-bg: #f6f7f9;
+	--color-surface: #fff;
+	--color-surface-muted: #eef0f3;
+	--color-border: #d9dde3;
+	--color-text: #16191d;
+	--color-text-muted: #5b6370;
+	--color-primary: #2f5bea;
+	--color-primary-hover: #2449c4;
+	--color-primary-contrast: #fff;
+	--color-danger: #c62f2f;
+	--color-danger-surface: #fdecec;
+	--color-warning-surface: #fff5e0;
+	--color-success-surface: #e8f6ec;
+	--color-info-surface: #eaf0fe;
+	--color-focus: #2f5bea;
+}
+
+@mixin dark-theme {
+	--color-bg: #121418;
+	--color-surface: #1b1e24;
+	--color-surface-muted: #242830;
+	--color-border: #343a44;
+	--color-text: #eceff3;
+	--color-text-muted: #a0a8b5;
+	--color-primary: #6d8cff;
+	--color-primary-hover: #8aa3ff;
+	--color-primary-contrast: #0d1020;
+	--color-danger: #ff7b7b;
+	--color-danger-surface: #3a1f22;
+	--color-warning-surface: #3a3020;
+	--color-success-surface: #1f3527;
+	--color-info-surface: #1f2a45;
+	--color-focus: #8aa3ff;
+}
+
+@mixin base-tokens {
+	--font-sans: system-ui, -apple-system, "Segoe UI", roboto, "Helvetica Neue", arial, sans-serif;
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.875rem;
+	--font-size-md: 1rem;
+	--font-size-lg: 1.25rem;
+	--font-size-xl: 1.5rem;
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.5rem;
+	--space-6: 2rem;
+	--radius-sm: 6px;
+	--radius-md: 10px;
+	--radius-lg: 14px;
+	--shadow-sm: 0 1px 2px rgb(0 0 0 / 6%);
+	--shadow-md: 0 8px 24px rgb(0 0 0 / 12%);
+	--transition-fast: 120ms ease;
+}
