@@ -2,32 +2,48 @@
 
 .navigator {
 	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-}
-
-.controls {
-	display: flex;
-	flex-wrap: wrap;
 	gap: var(--space-2);
 	align-items: center;
+	min-width: 0;
 }
 
-.input {
-	min-height: 36px;
-	padding: var(--space-1) var(--space-3);
-	background: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
+.arrows {
+	display: flex;
+	gap: 2px;
 }
 
-.caption {
-	font-size: var(--font-size-lg);
-	font-weight: 600;
+.picker {
+	min-width: 0;
+}
 
+.dateLong,
+.dateShort {
 	&::first-letter {
 		text-transform: uppercase;
 	}
+}
+
+.dateLong {
+	display: none;
+
+	@include mixins.from(sm) {
+		display: inline-block;
+	}
+}
+
+.dateShort {
+	display: inline-block;
+
+	@include mixins.from(sm) {
+		display: none;
+	}
+}
+
+.today {
+	margin-left: var(--space-2);
+	font-size: var(--font-size-sm);
+	font-weight: 400;
+	color: var(--color-text-subtle);
 }
 
 .srOnly {
