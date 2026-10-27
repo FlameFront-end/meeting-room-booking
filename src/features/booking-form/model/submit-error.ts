@@ -21,29 +21,30 @@ export type SubmitError =
 	| { type: 'gone'; message: string }
 	| { type: 'failure'; message: string }
 
-const CONFLICT_FALLBACK = 'Это время только что заняли. Список броней обновлён — выберите другое время.'
+// Текст сервера общий, а здесь важно объяснить, что случилось между открытием формы и отправкой
+const CONFLICT_MESSAGE = 'Пока вы заполняли форму, это время забронировали. Выберите другое.'
 
 export const toSubmitError = (error: unknown): SubmitError => {
 	if (isApiError(error) && error.kind === 'conflict') {
 		return {
 			type: 'conflict',
-			message: error.message || CONFLICT_FALLBACK,
+			message: CONFLICT_MESSAGE,
 			conflicts: getConflictsFromError(error)
 		}
 	}
 
 	const violations = getViolationsFromError(error)
-	if (violations.length > 0) return { type: 'violations', message: 'Проверьте выделенные поля', violations }
+	if (violations.length > 0) return { type: 'violations', message: 'Исправьте отмеченные поля.', violations }
 
 	if (isBookingErrorCode(error, BOOKING_ERROR_CODES.notFound)) {
-		return { type: 'gone', message: 'Бронь не найдена — похоже, её уже удалили. Список броней обновлён.' }
+		return { type: 'gone', message: 'Эту бронь уже удалили.' }
 	}
 	if (isBookingErrorCode(error, BOOKING_ERROR_CODES.locked)) {
-		return { type: 'gone', message: 'Бронь уже началась — изменить её нельзя.' }
+		return { type: 'gone', message: 'Встреча уже началась, её нельзя изменить.' }
 	}
 
 	return {
 		type: 'failure',
-		message: isApiError(error) ? error.message : 'Не удалось сохранить бронь. Попробуйте ещё раз.'
+		message: isApiError(error) ? error.message : 'Попробуйте ещё раз.'
 	}
 }

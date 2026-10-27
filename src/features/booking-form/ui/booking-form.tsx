@@ -1,6 +1,8 @@
+import type { CSSProperties, ReactNode } from 'react'
+
 import { formatBookingRange, type Booking } from '@/entities/booking'
-import { formatDuration, isTimeString, timeToMinutes } from '@/shared/lib/time'
-import { Alert, Button, Field } from '@/shared/ui'
+import { formatDuration } from '@/shared/lib/time'
+import { Alert, Button, DatePicker, Field, Reveal, Select } from '@/shared/ui'
 
 import type { BookingFormState } from '../model/use-booking-form'
 
@@ -11,22 +13,19 @@ import { SubmitErrorAlert } from './submit-error-alert'
 type BookingFormProps = {
 	state: BookingFormState
 	mode: 'create' | 'edit'
-	/** Минимальная дата в календаре — сегодня. */
-	minDate: string
+	/** Сегодня: раньше этой даты бронировать нельзя. */
+	today: string
+	extraAction?: ReactNode
 	onCancel: () => void
 }
 
-const describeDuration = (start: string, end: string): string | undefined => {
-	if (!isTimeString(start) || !isTimeString(end)) return undefined
-	const minutes = timeToMinutes(end) - timeToMinutes(start)
-	return minutes > 0 ? `Длительность: ${formatDuration(minutes)}` : undefined
-}
-
 const describeOverlap = (conflicts: readonly Booking[]) =>
-	conflicts.map(booking => `${formatBookingRange(booking)} (${booking.title ?? 'без названия'})`).join(', ')
+	conflicts.map(booking => `${formatBookingRange(booking)} · ${booking.title ?? 'Без названия'}`).join(', ')
 
-export const BookingForm = ({ state, mode, minDate, onCancel }: BookingFormProps) => {
+/** Порядок полей как в календарях: сначала «что», потом «когда». */
+export const BookingForm = ({ state, mode, today, extraAction, onCancel }: BookingFormProps) => {
 	const { fields, slot, errors, overlap, conflictIds, submitError, busy, startOptions, endOptions } = state
+	const activePreset = state.durationPresets.findIndex(preset => preset.pressed)
 
 	return (
 		<form
@@ -35,65 +34,129 @@ export const BookingForm = ({ state, mode, minDate, onCancel }: BookingFormProps
 			aria-busy={state.isPending}
 			onSubmit={event => void state.submit(event)}
 		>
-			{submitError ? <SubmitErrorAlert error={submitError} /> : null}
-			{!state.hasFreeSlot ? <Alert tone='info'>На эту дату свободного времени не осталось.</Alert> : null}
+			<Reveal>{submitError ? <SubmitErrorAlert error={submitError} /> : null}</Reveal>
+			<Reveal>
+				{!state.hasFreeSlot ? <Alert tone='info'>На этот день свободного времени нет.</Alert> : null}
+			</Reveal>
 
 			{/* Пока идёт отправка, поля заблокированы, а кнопка отправки — вне fieldset и не теряет фокус */}
 			<fieldset className={styles.fields} disabled={state.isPending}>
-				<Field label='Дата' error={errors.date}>
-					{control => (
-						<input {...control} {...fields.date} type='date' min={minDate} required data-autofocus />
-					)}
-				</Field>
-
-				<div className={styles.times}>
-					<Field label='Начало' error={errors.start}>
-						{control => (
-							<select {...control} {...fields.start}>
-								{startOptions.map(option => (
-									<option key={option.value} value={option.value} disabled={option.disabled}>
-										{option.value}
-									</option>
-								))}
-							</select>
-						)}
-					</Field>
-					<Field label='Окончание' error={errors.end} hint={describeDuration(slot.start, slot.end)}>
-						{control => (
-							<select {...control} {...fields.end}>
-								{endOptions.map(option => (
-									<option key={option.value} value={option.value} disabled={option.disabled}>
-										{option.value}
-									</option>
-								))}
-							</select>
-						)}
-					</Field>
-				</div>
-
-				<Field label='Название' hint='Необязательно' error={errors.title}>
+				<Field
+					label={
+						<>
+							Название <span className={styles.optional}>(необязательно)</span>
+						</>
+					}
+					error={errors.title}
+				>
 					{control => (
 						<input
 							{...control}
 							{...fields.title}
 							type='text'
 							autoComplete='off'
-							placeholder='Например, планирование спринта'
+							placeholder='Без названия'
+							data-autofocus
 						/>
 					)}
 				</Field>
+
+				<Field label='Дата' error={errors.date}>
+					{(control, { labelId }) => (
+						<DatePicker
+							id={control.id}
+							ref={fields.date.ref}
+							aria-labelledby={labelId}
+							aria-describedby={control['aria-describedby']}
+							aria-invalid={control['aria-invalid']}
+							value={fields.date.value}
+							min={today}
+							today={today}
+							onChange={fields.date.onChange}
+							onBlur={fields.date.onBlur}
+						/>
+					)}
+				</Field>
+
+				<div className={styles.time}>
+					<div className={styles.times}>
+						<Field label='Начало' error={errors.start}>
+							{(control, { labelId }) => (
+								<Select
+									id={control.id}
+									ref={fields.start.ref}
+									aria-labelledby={labelId}
+									aria-describedby={control['aria-describedby']}
+									aria-invalid={control['aria-invalid']}
+									value={fields.start.value}
+									options={startOptions}
+									onChange={fields.start.onChange}
+									onBlur={fields.start.onBlur}
+								/>
+							)}
+						</Field>
+						<span className={styles.dash} aria-hidden='true'>
+							—
+						</span>
+						<Field label='Окончание' error={errors.end}>
+							{(control, { labelId }) => (
+								<Select
+									id={control.id}
+									ref={fields.end.ref}
+									aria-labelledby={labelId}
+									aria-describedby={control['aria-describedby']}
+									aria-invalid={control['aria-invalid']}
+									value={fields.end.value}
+									options={endOptions}
+									onChange={fields.end.onChange}
+									onBlur={fields.end.onBlur}
+								/>
+							)}
+						</Field>
+					</div>
+
+					<div
+						className={styles.segmented}
+						role='group'
+						aria-label='Длительность'
+						style={{ '--active': activePreset } as CSSProperties}
+					>
+						{/* Плашка под активным вариантом — переезжает между пунктами, а не перерисовывается */}
+						<span className={styles.thumb} data-hidden={activePreset < 0 || undefined} aria-hidden='true' />
+						{state.durationPresets.map(preset => (
+							<button
+								key={preset.minutes}
+								type='button'
+								className={styles.preset}
+								aria-pressed={preset.pressed}
+								disabled={preset.disabled}
+								onClick={() => state.setDuration(preset.minutes)}
+							>
+								{formatDuration(preset.minutes)}
+							</button>
+						))}
+					</div>
+				</div>
 			</fieldset>
 
-			{overlap.length > 0 ? (
-				<Alert tone='warning' title='Время пересекается с другой бронью'>
-					{describeOverlap(overlap)}. Касаться границами можно: 10:00–11:00 и 11:00–12:00 не конфликтуют.
-				</Alert>
-			) : null}
+			<Reveal>
+				{overlap.length > 0 ? (
+					<Alert tone='warning' title='Это время занято'>
+						{describeOverlap(overlap)}
+					</Alert>
+				) : null}
+			</Reveal>
 
-			<BusySlots bookings={busy.bookings} status={busy.status} conflictIds={conflictIds} />
+			<BusySlots bookings={busy.bookings} status={busy.status} conflictIds={conflictIds} selected={slot} />
 
 			<div className={styles.actions}>
-				<Button variant='ghost' disabled={state.isPending} onClick={onCancel}>
+				{extraAction ? (
+					// Пока бронь сохраняется, удалять её нельзя
+					<fieldset className={styles.extraAction} disabled={state.isPending}>
+						{extraAction}
+					</fieldset>
+				) : null}
+				<Button variant='secondary' disabled={state.isPending} onClick={onCancel}>
 					Отмена
 				</Button>
 				<Button type='submit' variant='primary' loading={state.isPending}>

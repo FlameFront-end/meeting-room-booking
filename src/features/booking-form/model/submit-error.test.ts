@@ -11,7 +11,11 @@ describe('toSubmitError', () => {
 			code: 'BOOKING_CONFLICT',
 			details: { conflicts: [conflict] }
 		})
-		expect(toSubmitError(error)).toEqual({ type: 'conflict', message: 'Занято', conflicts: [conflict] })
+		expect(toSubmitError(error)).toEqual({
+			type: 'conflict',
+			message: 'Пока вы заполняли форму, это время забронировали. Выберите другое.',
+			conflicts: [conflict]
+		})
 	})
 
 	it('422 — нарушения правил для полей', () => {

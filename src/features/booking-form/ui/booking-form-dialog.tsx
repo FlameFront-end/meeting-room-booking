@@ -1,9 +1,10 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { toast } from 'sonner'
 
-import { BOOKING_DURATION_MINUTES, formatBookingRange, WORKING_HOURS, type Booking } from '@/entities/booking'
-import { formatIsoDate, toIsoDate } from '@/shared/lib/date'
+import { BOOKING_DURATION_MINUTES, formatBookingWhen, WORKING_HOURS, type Booking } from '@/entities/booking'
+import { toIsoDate } from '@/shared/lib/date'
 import { formatDuration } from '@/shared/lib/time'
 import { Dialog } from '@/shared/ui'
 
@@ -18,21 +19,31 @@ type BookingFormDialogProps = {
 	onClose: () => void
 	onSaved: (booking: Booking) => void
 	onConflict?: (conflicts: Booking[]) => void
+	/** Дополнительное действие слева в подвале формы — например, «Удалить» при редактировании. */
+	extraAction?: ReactNode
 }
 
-const RULES_HINT = `Рабочий день ${WORKING_HOURS.start}–${WORKING_HOURS.end}, длительность от ${formatDuration(
+// Коротко, чтобы помещалось в одну строку и на мобиле
+const RULES_HINT = `С ${WORKING_HOURS.start} до ${WORKING_HOURS.end}, от ${formatDuration(
 	BOOKING_DURATION_MINUTES.min
 )} до ${formatDuration(BOOKING_DURATION_MINUTES.max)}`
 
 /** Создание и редактирование брони в модальном окне. */
-export const BookingFormDialog = ({ target, now, onClose, onSaved, onConflict }: BookingFormDialogProps) => {
+export const BookingFormDialog = ({
+	target,
+	now,
+	onClose,
+	onSaved,
+	onConflict,
+	extraAction
+}: BookingFormDialogProps) => {
 	const state = useBookingForm({
 		target,
 		now,
 		onConflict,
 		onSaved: booking => {
-			toast.success(target.mode === 'create' ? 'Бронь создана' : 'Изменения сохранены', {
-				description: `${formatIsoDate(booking.date)}, ${formatBookingRange(booking)}`
+			toast.success(target.mode === 'create' ? 'Бронь создана' : 'Бронь обновлена', {
+				description: formatBookingWhen(booking)
 			})
 			onSaved(booking)
 		}
@@ -45,7 +56,13 @@ export const BookingFormDialog = ({ target, now, onClose, onSaved, onConflict }:
 			dismissible={!state.isPending}
 			onClose={onClose}
 		>
-			<BookingForm state={state} mode={target.mode} minDate={toIsoDate(now)} onCancel={onClose} />
+			<BookingForm
+				state={state}
+				mode={target.mode}
+				today={toIsoDate(now)}
+				extraAction={extraAction}
+				onCancel={onClose}
+			/>
 		</Dialog>
 	)
 }

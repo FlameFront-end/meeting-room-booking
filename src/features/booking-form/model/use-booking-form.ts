@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState, type ChangeEvent } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useRef, useState } from 'react'
+import { useController, useForm } from 'react-hook-form'
 
 import {
 	bookingsQueryOptions,
@@ -18,7 +18,7 @@ import {
 	type BookingSlot
 } from '@/entities/booking'
 import { isIsoDate } from '@/shared/lib/date'
-import { isTimeString } from '@/shared/lib/time'
+import { isTimeString, minutesToTime, timeToMinutes } from '@/shared/lib/time'
 
 import {
 	bookingFormSchema,
@@ -42,6 +42,10 @@ type UseBookingFormOptions = {
 
 const FIELDS: readonly BookingFormField[] = ['date', 'start', 'end', 'title']
 
+/** Быстрый выбор длительности: покрывает почти все встречи, остальное — через «Окончание». */
+const DURATION_PRESETS = [30, 60, 90, 120] as const
+const WORKDAY_END_MINUTES = timeToMinutes(WORKING_HOURS.end)
+
 const getDefaults = (
 	target: BookingFormTarget,
 	bookings: readonly Booking[],
@@ -52,7 +56,7 @@ const getDefaults = (
 		return { values: { date, start, end, title }, hasFreeSlot: true }
 	}
 
-	const slot = suggestFreeSlot(target.date, bookings, now)
+	const slot = suggestFreeSlot(target.date, bookings, now, target.from)
 	if (slot) return { values: { ...slot, title: '' }, hasFreeSlot: true }
 
 	// Свободного времени нет — показываем начало дня, а правила объяснят, почему его не забронировать
@@ -88,7 +92,13 @@ export const useBookingForm = ({ target, now, onSaved, onConflict }: UseBookingF
 		resolver: zodResolver(bookingFormSchema),
 		mode: 'onTouched'
 	})
-	const [date, start, end] = useWatch({ control: form.control, name: ['date', 'start', 'end'] })
+	// Дата и время — собственные контролы (DatePicker, Select), поэтому управляемые
+	const dateField = useController({ control: form.control, name: 'date' }).field
+	const startField = useController({ control: form.control, name: 'start' }).field
+	const endField = useController({ control: form.control, name: 'end' }).field
+	const { value: date } = dateField
+	const { value: start } = startField
+	const { value: end } = endField
 	const slot: BookingSlot = { date, start, end }
 	const isSlotComplete = isIsoDate(date) && isTimeString(start) && isTimeString(end)
 
@@ -162,20 +172,33 @@ export const useBookingForm = ({ target, now, onSaved, onConflict }: UseBookingF
 	// eslint-disable-next-line react-hooks/refs
 	const submit = form.handleSubmit(onValid)
 
-	const startField = form.register('start')
-	const onStartChange = (event: ChangeEvent<HTMLSelectElement>) => {
+	const onStartChange = (next: string) => {
 		// Сдвигаем окончание вслед за началом, сохраняя длительность — как в календарях
-		form.setValue('end', shiftEndWithStart(form.getValues(), event.target.value))
-		return startField.onChange(event)
+		endField.onChange(shiftEndWithStart({ start, end }, next))
+		startField.onChange(next)
+	}
+
+	const durationPresets = DURATION_PRESETS.map(minutes => {
+		const presetEnd = isTimeString(start) ? timeToMinutes(start) + minutes : Number.POSITIVE_INFINITY
+		return {
+			minutes,
+			pressed: isSlotComplete && timeToMinutes(end) - timeToMinutes(start) === minutes,
+			disabled: presetEnd > WORKDAY_END_MINUTES
+		}
+	})
+	const setDuration = (minutes: number) => {
+		if (isTimeString(start)) endField.onChange(minutesToTime(timeToMinutes(start) + minutes))
 	}
 
 	return {
 		fields: {
-			date: form.register('date'),
+			date: dateField,
 			start: { ...startField, onChange: onStartChange },
-			end: form.register('end'),
+			end: endField,
 			title: form.register('title')
 		},
+		durationPresets,
+		setDuration,
 		slot,
 		errors,
 		/** Пересечения, найденные на клиенте до отправки. */
