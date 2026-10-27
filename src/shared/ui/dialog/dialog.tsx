@@ -3,6 +3,8 @@
 import clsx from 'clsx'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 
+import { Icon } from '../icon/icon'
+
 import styles from './dialog.module.scss'
 
 type DialogProps = {
@@ -34,8 +36,11 @@ export const Dialog = ({ title, description, onClose, dismissible = true, size =
 		if (!dialog) return
 		const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
 		dialog.showModal()
-		// По умолчанию браузер фокусирует первый интерактивный элемент — крестик. Полезнее первое поле
-		dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+		// По умолчанию браузер фокусирует первый интерактивный элемент — крестик. Полезнее первое поле,
+		// но не на тач-устройствах: фокус в поле сразу открывает экранную клавиатуру поверх формы
+		if (!window.matchMedia('(pointer: coarse)').matches) {
+			dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
+		}
 
 		return () => {
 			dialog.close()
@@ -82,7 +87,7 @@ export const Dialog = ({ title, description, onClose, dismissible = true, size =
 						disabled={!dismissible}
 						onClick={requestClose}
 					>
-						<span aria-hidden='true'>×</span>
+						<Icon name='close' size={18} />
 					</button>
 				</header>
 				{children}

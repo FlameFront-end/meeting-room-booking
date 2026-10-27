@@ -1,0 +1,124 @@
+@use "shared/styles/mixins";
+
+.root {
+	position: relative;
+	width: 100%;
+}
+
+.trigger {
+	display: flex;
+	gap: var(--space-2);
+	align-items: center;
+	width: 100%;
+	min-height: var(--control-height);
+	padding: 0 var(--space-3);
+	font-size: var(--font-size-sm);
+	font-variant-numeric: tabular-nums;
+	text-align: left;
+	cursor: pointer;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border-strong);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-sm);
+	transition:
+		border-color var(--transition-fast),
+		box-shadow var(--transition-fast);
+
+	&[aria-expanded="true"] {
+		border-color: var(--color-focus);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 20%, transparent);
+	}
+
+	&[aria-invalid="true"] {
+		border-color: var(--color-danger);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+}
+
+.icon {
+	flex-shrink: 0;
+	color: var(--color-text-subtle);
+}
+
+.value {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.chevron {
+	flex-shrink: 0;
+	color: var(--color-text-subtle);
+	transition: transform var(--transition-base);
+}
+
+.chevronOpen {
+	transform: rotate(180deg);
+}
+
+.list {
+	// Позицию задаёт useAnchoredPopover: элемент в top layer, координаты от кнопки
+	position: fixed;
+	inset: auto;
+	max-height: 15rem;
+	padding: var(--space-1);
+	margin: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	color: inherit;
+	list-style: none;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-md);
+	transform-origin: top center;
+	animation: pop-in 140ms cubic-bezier(0.3, 0.7, 0.2, 1);
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 32px;
+	padding: 0 var(--space-2);
+	font-size: var(--font-size-sm);
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	transition: background-color 80ms ease;
+
+	&[aria-disabled="true"] {
+		color: var(--color-text-subtle);
+		cursor: default;
+	}
+}
+
+.active {
+	background: var(--color-surface-hover);
+}
+
+.selected {
+	font-weight: 500;
+}
+
+.check {
+	flex-shrink: 0;
+}
+
+@keyframes pop-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.98);
+	}
+}

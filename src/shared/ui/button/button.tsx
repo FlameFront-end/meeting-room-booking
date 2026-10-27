@@ -5,7 +5,7 @@ import { Spinner } from '../spinner/spinner'
 
 import styles from './button.module.scss'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dangerSolid'
 type ButtonSize = 'sm' | 'md'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -14,6 +14,8 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 	/** Показывает спиннер и блокирует повторное нажатие, но оставляет кнопку в фокусе. */
 	loading?: boolean
 	icon?: ReactNode
+	/** Только иконка: квадратная кнопка. Доступное имя тогда задаётся через aria-label. */
+	iconOnly?: boolean
 }
 
 export const Button = ({
@@ -21,6 +23,7 @@ export const Button = ({
 	size = 'md',
 	loading = false,
 	icon,
+	iconOnly = false,
 	disabled,
 	className,
 	children,
@@ -30,7 +33,7 @@ export const Button = ({
 	<button
 		{...rest}
 		type={type}
-		className={clsx(styles.button, styles[variant], styles[size], className)}
+		className={clsx(styles.button, styles[variant], styles[size], iconOnly && styles.iconOnly, className)}
 		disabled={disabled ?? false}
 		aria-disabled={loading || undefined}
 		aria-busy={loading || undefined}
@@ -38,6 +41,6 @@ export const Button = ({
 		onClick={loading ? undefined : rest.onClick}
 	>
 		{loading ? <Spinner size='sm' decorative /> : icon}
-		<span>{children}</span>
+		{children === undefined ? null : <span>{children}</span>}
 	</button>
 )

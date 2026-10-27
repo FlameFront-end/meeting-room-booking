@@ -29,15 +29,24 @@ body {
 	margin: 0;
 	font-family: var(--font-sans);
 	font-size: var(--font-size-md);
+	font-feature-settings:
+		"cv11",
+		"tnum" 0;
 	line-height: 1.5;
 	color: var(--color-text);
 	background: var(--color-bg);
+	-webkit-font-smoothing: antialiased;
+}
+
+::selection {
+	background: var(--color-info-border);
 }
 
 h1,
 h2,
 h3,
-p {
+p,
+ul {
 	margin: 0;
 }
 
@@ -66,4 +75,40 @@ textarea {
 // Пока открыто модальное окно, страница под ним не прокручивается
 :root:has(dialog[open]) {
 	overflow: hidden;
+}
+
+// Тосты sonner. Его стили вставляются в страницу во время выполнения, поэтому специфичность выше
+:root [data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+	gap: var(--space-3);
+	align-items: flex-start;
+	padding: var(--space-3) var(--space-4);
+	font-size: var(--font-size-sm);
+	box-shadow: var(--shadow-lg);
+
+	[data-icon] {
+		margin-top: 1px;
+	}
+
+	[data-title] {
+		font-weight: 500;
+		line-height: 1.4;
+	}
+
+	[data-description] {
+		margin-top: 2px;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+
+	&[data-type="success"] [data-icon] {
+		color: var(--color-success);
+	}
+
+	&[data-type="info"] [data-icon] {
+		color: var(--color-info);
+	}
+
+	&[data-type="error"] [data-icon] {
+		color: var(--color-danger);
+	}
 }

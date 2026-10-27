@@ -1,16 +1,31 @@
 .field {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-1);
+	gap: 6px;
 	min-width: 0;
 
-	:where(input, select, textarea) {
+	:where(input) {
 		width: 100%;
-		min-height: 44px;
-		padding: var(--space-2) var(--space-3);
+		min-height: var(--control-height);
+		padding: 0 var(--space-3);
+		font-size: var(--font-size-sm);
+		outline: none;
 		background: var(--color-surface);
-		border: 1px solid var(--color-border);
+		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-sm);
+		transition:
+			border-color var(--transition-fast),
+			box-shadow var(--transition-fast);
+
+		&::placeholder {
+			color: var(--color-text-subtle);
+		}
+
+		&:focus-visible {
+			border-color: var(--color-focus);
+			box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 20%, transparent);
+		}
 
 		&:disabled {
 			cursor: not-allowed;
@@ -19,13 +34,14 @@
 	}
 }
 
-.invalid :where(input, select, textarea) {
+.invalid :where(input) {
 	border-color: var(--color-danger);
 }
 
 .label {
 	font-size: var(--font-size-sm);
 	font-weight: 500;
+	color: var(--color-text);
 }
 
 .hint {
@@ -34,10 +50,32 @@
 }
 
 .error {
-	font-size: var(--font-size-sm);
+	display: flex;
+	gap: var(--space-1);
+	align-items: flex-start;
+	font-size: var(--font-size-xs);
 	color: var(--color-danger);
 
 	&:empty {
 		display: none;
 	}
+}
+
+.errorText {
+	display: inline-flex;
+	gap: var(--space-1);
+	align-items: flex-start;
+	animation: error-in 180ms ease;
+}
+
+@keyframes error-in {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+}
+
+.errorIcon {
+	flex-shrink: 0;
+	margin-top: 1px;
 }

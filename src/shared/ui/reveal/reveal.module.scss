@@ -1,0 +1,23 @@
+// Свёрнутый блок не должен добавлять родителю лишний gap: компенсируем его отрицательным отступом.
+// Родитель задаёт свой gap через --reveal-gap (по умолчанию 0).
+.reveal {
+	display: grid;
+	grid-template-rows: 0fr;
+	margin-bottom: calc(-1 * var(--reveal-gap, 0px));
+	opacity: 0;
+	transition:
+		grid-template-rows 220ms cubic-bezier(0.3, 0.7, 0.2, 1),
+		margin-bottom 220ms cubic-bezier(0.3, 0.7, 0.2, 1),
+		opacity 180ms ease;
+
+	&[data-open] {
+		grid-template-rows: 1fr;
+		margin-bottom: 0;
+		opacity: 1;
+	}
+}
+
+.inner {
+	min-height: 0;
+	overflow: hidden;
+}
